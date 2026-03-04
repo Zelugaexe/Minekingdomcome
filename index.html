@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MineKingdom 我的天国</title>
+    <!-- 本地化资源引用 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="assets/css/font-awesome.min.css" rel="stylesheet">
+    <link href="assets/css/aos.css" rel="stylesheet">
+    <script src="assets/js/aos.js"></script>
+    <script src="assets/js/gsap.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#52A552',
+                        secondary: '#FF6B00',
+                        dark: '#1A1A1A',
+                        light: '#F5F5F5',
+                        accent: '#FFD700'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        minecraft: ['Minecraft', 'sans-serif']
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            }
+            .text-shadow-lg {
+                text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);
+            }
+            .bg-glass {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .hover-scale {
+                transition: transform 0.3s ease;
+            }
+            .hover-scale:hover {
+                transform: scale(1.05);
+            }
+            .animate-fade-in {
+                animation: fadeIn 1s ease-in-out;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            .animate-slide-up {
+                animation: slideUp 0.8s ease-out;
+            }
+            @keyframes slideUp {
+                from { transform: translateY(50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            .animate-pulse-border {
+                animation: pulseBorder 2s infinite;
+            }
+            @keyframes pulseBorder {
+                0% { box-shadow: 0 0 0 0 rgba(82, 165, 82, 0.7); }
+                70% { box-shadow: 0 0 0 10px rgba(82, 165, 82, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(82, 165, 82, 0); }
+            }
+        }
+    </style>
+
+    <style>
+        /* 引入Minecraft中文字体 - 本地字体文件 */
+        @font-face {
+            font-family: 'Minecraft';
+            src: url('fonts/Minecraft.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        
+        @font-face {
+            font-family: 'Inter';
+            src: url('fonts/Inter-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+            font-family: 'Minecraft', 'Inter', sans-serif; /* 优先使用Minecraft字体 */
+        }
+        
+        body {
+            font-family: 'Minecraft', 'Inter', sans-serif;
+            background-color: #121212;
+            color: #F5F5F5;
+        }
+        
+        .hero-section {
+            background-image: url('assets/images/hero-bg.jpg'); /* 本地背景图 */
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.8));
+            z-index: 1;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .navbar {
+            transition: all 0.3s ease;
+        }
+        
+        .navbar.scrolled {
+            background-color: rgba(26, 26, 26, 0.95);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .news-card {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .admin-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .admin-info {
+            position: absolute;
+            bottom: -100%;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-card:hover .admin-info {
+            bottom: 0;
+        }
+        
+        .admin-card:hover img {
+            transform: scale(1.1);
+        }
+        
+        .admin-card img {
+            transition: transform 0.5s ease;
+        }
+        
+        .mod-card {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .mod-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #52A552;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .back-to-top.visible {
+            opacity: 1;
+        }
+        
+        .back-to-top:hover {
+            background-color: #429142;
+            transform: translateY(-3px);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: #1A1A1A;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 800px;
+            position: relative;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #aaa;
+            transition: color 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .btn-primary {
+            background-color: #52A552;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .btn-primary:hover {
+            background-color: #429142;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .btn-secondary {
+            background-color: #FF6B00;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #E55E00;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .countdown-timer {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .click-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(82, 165, 82, 0.6);
+            transform: scale(0);
+            animation: clickEffect 0.6s ease-out;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-menu {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 80%;
+                height: 100vh;
+                background-color: #1A1A1A;
+                z-index: 1000;
+                transition: right 0.3s ease;
+                padding: 20px;
+                overflow-y: auto;
+            }
+            
+            .navbar-menu.active {
+                right: 0;
+            }
+            
+            .overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+                display: none;
+            }
+            
+            .overlay.active {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar fixed w-full z-50 py-4 px-6">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="#" class="flex items-center">
+                <img src="assets/images/server-icon.png" alt="logo" class="h-10 w-10 mr-3">
+                <span class="text-xl font-bold text-white text-shadow">MINEKINGDOM 我的天国</span>
+            </a>
+            
+            <!-- 桌面导航 - 添加英文标注 -->
+            <div class="hidden md:flex space-x-8">
+                <a href="#home" class="text-white hover:text-primary transition-colors duration-300 font-medium">主页 <span class="text-sm text-gray-400">(Home)</span></a>
+                <a href="#about" class="text-white hover:text-primary transition-colors duration-300 font-medium">关于我们 <span class="text-sm text-gray-400">(About)</span></a>
+                <a href="#news" class="text-white hover:text-primary transition-colors duration-300 font-medium">新闻 <span class="text-sm text-gray-400">(News)</span></a>
+                <a href="#events" class="text-white hover:text-primary transition-colors duration-300 font-medium">活动 <span class="text-sm text-gray-400">(Events)</span></a>
+                <a href="#donate" class="text-white hover:text-primary transition-colors duration-300 font-medium">赞助 <span class="text-sm text-gray-400">(Donate)</span></a>
+                <a href="#feedback" class="text-white hover:text-primary transition-colors duration-300 font-medium">反馈 <span class="text-sm text-gray-400">(Feedback)</span></a>
+                <a href="#mods" class="text-white hover:text-primary transition-colors duration-300 font-medium">我们使用的模组 <span class="text-sm text-gray-400">(Mods)</span></a>
+            </div>
+            
+            <!-- 移动端菜单按钮 -->
+            <div class="md:hidden">
+                <button id="menu-toggle" class="text-white focus:outline-none">
+                    <i class="fa fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 移动端导航菜单 - 添加英文标注 -->
+        <div id="navbar-menu" class="navbar-menu md:hidden">
+            <div class="flex justify-end mb-8">
+                <button id="close-menu" class="text-white focus:outline-none">
+                    <i class="fa fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="flex flex-col space-y-6">
+                <a href="#home" class="text-white hover:text-primary transition-colors duration-300 font-medium text-lg">主页 <span class="text-sm text-gray-400">(Home)</span></a>
+                <a href="#about" class="text-white hover:text-primary transition-colors duration-300 font-medium text-lg">关于我们 <span class="text-sm text-gray-400">(About)</span></a>
+                <a href="#news" class="text-white hover:text-primary transition-colors duration-300 font-medium text-lg">新闻 <span class="text-sm text-gray-400">(News)</span></a>
+                <a href="#events" class="text-white hover:text-primary transition-colors duration-300 font-medium text-lg">活动 <span class="text-sm text-gray-400">(Events)</span></a>
+                <a href="#donate" class="text-white hover:text-primary transition-colors duration-300 font-medium text-lg">赞助 <span class="text-sm text-gray-400">(Donate)</span></a>
+                <a href="#feedback" class="text-white hover:text-primary transition-colors duration-300 font-medium text-lg">反馈 <span class="text-sm text-gray-400">(Feedback)</span></a>
+                <a href="#mods" class="text-white hover:text-primary transition-colors duration-300 font-medium text-lg">我们使用的模组 <span class="text-sm text-gray-400">(Mods)</span></a>
+            </div>
+        </div>
+        <div id="overlay" class="overlay"></div>
+    </nav>
+
+    <!-- 英雄区域 -->
+    <section id="home" class="hero-section min-h-screen flex items-center justify-center">
+        <div class="hero-content container mx-auto px-6 text-center" data-aos="fade-up" data-aos-duration="1000">
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 text-shadow-lg animate-fade-in">MineKingdom-我的天国</h1>
+            <p class="text-xl md:text-2xl text-gray-200 mb-10 max-w-3xl mx-auto text-shadow animate-slide-up">加入MineKingdom，来到魔法与奇幻交织的神奇国度！</p>
+            <div class="flex flex-col md:flex-row justify-center gap-4 animate-slide-up" style="animation-delay: 0.3s;">
+                <a href="#about" class="btn-primary">了解更多</a>
+                <a href="#join" class="btn-secondary">立即加入</a>
+            </div>
+            
+            <!-- 服务器状态 -->
+            <div class="mt-16 bg-glass rounded-lg p-6 max-w-2xl mx-auto animate-fade-in" style="animation-delay: 0.6s;">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="mb-4 md:mb-0">
+                        <h3 class="text-xl font-semibold text-white mb-2">服务器状态</h3>
+                        <div class="flex items-center">
+                            <span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                            <span class="text-green-400 font-medium">在线</span>
+                        </div>
+                    </div>
+                    <div class="text-center md:text-right">
+                        <h3 class="text-xl font-semibold text-white mb-2">运行时间</h3>
+                        <div id="uptime" class="countdown-timer text-lg font-mono text-white">00天 00小时 00分钟 00秒</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 关于我们 -->
+    <section id="about" class="py-20 bg-dark">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16 text-primary" data-aos="fade-up">关于我们</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div data-aos="fade-right">
+                    <img src="assets/images/minecraft-scene.jpg" alt="我的世界场景" class="rounded-lg shadow-xl hover-scale">
+                </div>
+                <div data-aos="fade-left">
+                    <h3 class="text-2xl font-semibold mb-6 text-white">我们的故事</h3>
+                    <p class="text-gray-300 mb-6 leading-relaxed">MineKingdom-我的天国   是一个中世纪风的RP类型养老服务器，成立于xxx年。目标是创建一个友好、安全且充满创造力的游戏环境，让所有玩家都能在这里找到乐趣。</p>
+                    <p class="text-gray-300 mb-6 leading-relaxed">我们的服务器涵盖多方面，包括生存、养老和战斗，满足不同玩家的需求。我们是一个较为专业的管理团队，尽量确保服务器的稳定运行和玩家体验。</p>
+                    <div class="flex flex-wrap gap-4 mt-8">
+                        <div class="bg-gray-800 rounded-lg p-4 text-center flex-1 min-w-[120px]">
+                            <div class="text-3xl font-bold text-primary mb-2">最大40人</div>
+                            <div class="text-gray-400">服务器最大可游玩人数玩家</div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4 text-center flex-1 min-w-[120px]">
+                            <div class="text-3xl font-bold text-primary mb-2">24小时</div>
+                            <div class="text-gray-400">全天候运行(毕竟不是我们自己的)</div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4 text-center flex-1 min-w-[120px]">
+                            <div class="text-3xl font-bold text-primary mb-2">价值60000+钻石</div>
+                            <div class="text-gray-400">涵盖休闲，养老，冒险，体验mod</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 新闻区域 -->
+    <section id="news" class="py-20 bg-gray-900">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16 text-primary" data-aos="fade-up">最新动态</h2>
+            
+            <!-- 新闻筛选按钮 -->
+            <div class="flex justify-center mb-12" data-aos="fade-up">
+                <div class="inline-flex rounded-md shadow-sm" role="group">
+                    <button type="button" id="latest-btn" class="px-6 py-2 text-sm font-medium text-white bg-primary rounded-l-lg hover:bg-green-700 focus:z-10 focus:ring-2 focus:ring-green-300">
+                        最新
+                    </button>
+                    <button type="button" id="popular-btn" class="px-6 py-2 text-sm font-medium text-white bg-gray-700 rounded-r-lg hover:bg-gray-600 focus:z-10 focus:ring-2 focus:ring-green-300">
+                        最热
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 新闻内容 -->
+            <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- 新闻卡片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 管理员信息 -->
+    <section id="admins" class="py-20 bg-dark">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16 text-primary" data-aos="fade-up">猫夸父天庭（管理员组织）</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- 管理员卡片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 活动区域 -->
+    <section id="events" class="py-20 bg-gray-900">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16 text-primary" data-aos="fade-up">即将举行的活动</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 活动卡片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 赞助区域 -->
+    <section id="donate" class="py-20 bg-dark">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16 text-primary" data-aos="fade-up">支持我们</h2>
+            <div class="max-w-3xl mx-auto text-center mb-12" data-aos="fade-up">
+                <p class="text-xl text-gray-300 mb-8">40人山头所需的巨大开支使我们无法每月为服务器提供稳定的续费来源，请帮助我们！</p>
+                <a href="#" class="btn-secondary text-lg px-8 py-3">立即赞助</a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-gray-800 rounded-lg p-8 text-center hover-scale" data-aos="fade-up" data-aos-delay="100">
+                    <div class="text-4xl font-bold text-primary mb-4">方案一</div>
+                    <div class="text-2xl font-semibold text-white mb-6">¥10</div>
+                    <ul class="text-left text-gray-300 space-y-3 mb-8">
+                        <li><i class="fa fa-check text-green-500 mr-2"></i> 2000 钻石币 + 2 金条(游戏内)</li>
+                        <li><i class="fa fa-check text-green-500 mr-2"></i> 游戏内专属支持者礼包</li>
+                        <li><i class="fa fa-check text-green-500 mr-2"></i> 成为拯救服务器的大恩人</li>
+                    </ul>
+                    <a href="#" class="btn-primary w-full">就它了！</a>
+                </div>
+                
+                <div class="bg-gray-800 rounded-lg p-8 text-center hover-scale animate-pulse-border" data-aos="fade-up">
+                    <div class="text-4xl font-bold text-secondary mb-4">方案二</div>
+                    <div class="text-2xl font-semibold text-white mb-6">¥20</div>
+                    <ul class="text-left text-gray-300 space-y-3 mb-8">
+                        <li><i class="fa fa-check text-green-500 mr-2"></i> 4000 钻石币 + 4 金条(游戏内)</li>
+                        <li><i class="fa fa-check text-green-500 mr-2"></i> 游戏内专属支持者礼包</li>
+                        <li><i class="fa fa-check text-green-500 mr-2"></i> 免费的主城居住区房屋永久所有权</li>
+                        <li><i class="fa fa-check text-green-500 mr-2"></i> 成为拯救服务器的大恩人</li>
+                    </ul>
+                    <a href="#" class="btn-secondary w-full">就它了！</a>
+                </div>
+                
+                <div class="bg-gray-800 rounded-lg p-8 text-center hover-scale" data-aos="fade-up" data-aos-delay="100">
+                    <div class="text-4xl font-bold text-accent mb-4">方案三(真的吗)</div>
+                    <div class="text-2xl font-semibold text-white mb-6">¥30</div>
+                    <ul class="text-left text-gray-300 space-y-3 mb-8">
+                        <li><i class="fa fa-check text-green-500 mr-2"></i> 6000 钻石币 + 6 金条(游戏内)</li>
+                        <li><i class="fa fa-check text-green-500 mr-2"></i> 游戏内专属支持者礼包</li>
+                        <li><i class="fa fa-check text-green-500 mr-2"></i> 免费的主城居住区房屋永久所有权</li>
+                        <li><i class="fa fa-check text-green-500 mr-2"></i> 成为拯救服务器的大恩人</li>
+                    </ul>
+                    <a href="#" class="btn-primary w-full">兄弟仁义！</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 反馈区域 -->
+    <section id="feedback" class="py-20 bg-gray-900">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16 text-primary" data-aos="fade-up">提交反馈</h2>
+            <div class="max-w-3xl mx-auto">
+                <form id="feedback-form" class="space-y-6" data-aos="fade-up">
+                    <div>
+                        <label for="name" class="block text-gray-300 mb-2">您的游戏ID</label>
+                        <input type="text" id="name" name="name" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white" required>
+                    </div>
+                    <div>
+                        <label for="email" class="block text-gray-300 mb-2">联系方式</label>
+                        <input type="email" id="email" name="email" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white" required>
+                    </div>
+                    <div>
+                        <label for="type" class="block text-gray-300 mb-2">反馈类型</label>
+                        <select id="type" name="type" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white" required>
+                            <option value="">请选择</option>
+                            <option value="bug">Bug报告</option>
+                            <option value="suggestion">功能建议</option>
+                            <option value="complaint">投诉</option>
+                            <option value="praise">表扬</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="message" class="block text-gray-300 mb-2">反馈内容</label>
+                        <textarea id="message" name="message" rows="6" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white" required></textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn-primary text-lg px-8 py-3">提交反馈</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 模组区域 -->
+    <section id="mods" class="py-20 bg-dark">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16 text-primary" data-aos="fade-up">我们使用的模组(用整合包涵盖)</h2>
+            
+            <!-- 模组分类标签 -->
+            <div class="flex flex-wrap justify-center gap-4 mb-12" data-aos="fade-up">
+                <button class="mod-filter px-4 py-2 rounded-full bg-primary text-white" data-filter="all">全部</button>
+                <button class="mod-filter px-4 py-2 rounded-full bg-gray-700 text-white" data-filter="building">建筑</button>
+                <button class="mod-filter px-4 py-2 rounded-full bg-gray-700 text-white" data-filter="tech">科技</button>
+                <button class="mod-filter px-4 py-2 rounded-full bg-gray-700 text-white" data-filter="magic">魔法</button>
+                <button class="mod-filter px-4 py-2 rounded-full bg-gray-700 text-white" data-filter="adventure">冒险</button>
+                <button class="mod-filter px-4 py-2 rounded-full bg-gray-700 text-white" data-filter="utility">实用工具</button>
+            </div>
+            
+            <!-- 模组内容 -->
+            <div id="mods-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- 模组卡片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-4">服务器加入链接</h3>
+                    <p class="text-gray-400">即将到来     2026年7月1日</p>
+		    <p class="text-gray-400">Coming Soon  2026.7.1</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-4">快速链接</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-gray-400 hover:text-primary transition-colors">主页</a></li>
+                        <li><a href="#about" class="text-gray-400 hover:text-primary transition-colors">关于我们</a></li>
+                        <li><a href="#news" class="text-gray-400 hover:text-primary transition-colors">新闻</a></li>
+                        <li><a href="#events" class="text-gray-400 hover:text-primary transition-colors">活动</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-4">社区</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Discord</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">QQ</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Microsoft Teams</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Skype</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-4">联系我们</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center"><i class="fa fa-envelope text-primary mr-2"></i> <a href="mailto:MineKingdomCome@163.com" class="text-gray-400 hover:text-primary transition-colors">MineKingdomCome@163.com</a></li>
+			<li class="flex items-center"><i class="fa fa-envelope text-primary mr-2"></i> <a href="mailto:3994731833@qq.com" class="text-gray-400 hover:text-primary transition-colors">3994731833@qq.com</a></li>
+                        <li class="flex items-center"><i class="fa fa-phone text-primary mr-2"></i> <span class="text-gray-400">QQ群：1234567890</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center">
+                <p class="text-gray-500">&copy; 666保留所有权都来了.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 回到顶部按钮 -->
+    <div id="back-to-top" class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+    </div>
+
+    <!-- 管理员详情模态框 -->
+    <div id="admin-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <div id="admin-details">
+                <!-- 管理员详情将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化AOS动画库
+        document.addEventListener('DOMContentLoaded', function() {
+            AOS.init({
+                duration: 800,
+                easing: 'ease-in-out',
+                once: true
+            });
+            
+            // 导航栏滚动效果
+            const navbar = document.querySelector('.navbar');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+            
+            // 移动端菜单
+            const menuToggle = document.getElementById('menu-toggle');
+            const closeMenu = document.getElementById('close-menu');
+            const navbarMenu = document.getElementById('navbar-menu');
+            const overlay = document.getElementById('overlay');
+            
+            menuToggle.addEventListener('click', function() {
+                navbarMenu.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            closeMenu.addEventListener('click', function() {
+                navbarMenu.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+            
+            overlay.addEventListener('click', function() {
+                navbarMenu.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+            
+            // 移动端菜单项点击关闭菜单
+            const mobileMenuItems = navbarMenu.querySelectorAll('a');
+            mobileMenuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    navbarMenu.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                });
+            });
+            
+            // 回到顶部按钮
+            const backToTop = document.getElementById('back-to-top');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    backToTop.classList.add('visible');
+                } else {
+                    backToTop.classList.remove('visible');
+                }
+            });
+            
+            backToTop.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // 服务器运行时间计时器
+            updateUptime();
+            setInterval(updateUptime, 1000);
+            
+            // 加载新闻数据
+            loadNews('latest');
+            
+            // 新闻筛选按钮
+            const latestBtn = document.getElementById('latest-btn');
+            const popularBtn = document.getElementById('popular-btn');
+            
+            latestBtn.addEventListener('click', function() {
+                latestBtn.classList.remove('bg-gray-700');
+                latestBtn.classList.add('bg-primary');
+                popularBtn.classList.remove('bg-primary');
+                popularBtn.classList.add('bg-gray-700');
+                loadNews('latest');
+            });
+            
+            popularBtn.addEventListener('click', function() {
+                popularBtn.classList.remove('bg-gray-700');
+                popularBtn.classList.add('bg-primary');
+                latestBtn.classList.remove('bg-primary');
+                latestBtn.classList.add('bg-gray-700');
+                loadNews('popular');
+            });
+            
+            // 加载管理员数据
+            loadAdmins();
+            
+            // 加载活动数据
+            loadEvents();
+            
+            // 加载模组数据
+            loadMods('all');
+            
+            // 模组筛选按钮
+            const modFilters = document.querySelectorAll('.mod-filter');
+            modFilters.forEach(filter => {
+                filter.addEventListener('click', function() {
+                    modFilters.forEach(btn => {
+                        btn.classList.remove('bg-primary');
+                        btn.classList.add('bg-gray-700');
+                    });
+                    this.classList.remove('bg-gray-700');
+                    this.classList.add('bg-primary');
+                    loadMods(this.getAttribute('data-filter'));
+                });
+            });
+            
+            // 反馈表单提交
+            const feedbackForm = document.getElementById('feedback-form');
+            feedbackForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // 模拟表单提交
+                alert('感谢您的反馈！我们会尽快处理。');
+                feedbackForm.reset();
+            });
+            
+            // 管理员详情模态框
+            const adminModal = document.getElementById('admin-modal');
+            const closeModal = document.querySelector('.modal .close-btn');
+            
+            closeModal.addEventListener('click', function() {
+                adminModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+            
+            window.addEventListener('click', function(e) {
+                if (e.target === adminModal) {
+                    adminModal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+        
+        // 服务器运行时间计时器
+        function updateUptime() {
+            // 模拟服务器启动时间（实际应用中应从服务器获取）
+            const startTime = new Date('2026-01-01T00:00:00').getTime();
+            const now = new Date().getTime();
+            const diff = now - startTime;
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('uptime').textContent = 
+                `${days.toString().padStart(2, '0')}天 ${hours.toString().padStart(2, '0')}小时 ${minutes.toString().padStart(2, '0')}分钟 ${seconds.toString().padStart(2, '0')}秒`;
+        }
+        
+        // 加载新闻数据
+        function loadNews(type) {
+            const newsContainer = document.getElementById('news-container');
+            newsContainer.innerHTML = '';
+            
+            // 模拟新闻数据
+            const newsData = [
+                {
+                    id: 1,
+                    title: '服务器2.0版本更新公告',
+                    date: '2026-03-01',
+                    content: '我们很高兴地宣布服务器2.0版本正式上线！本次更新带来了全新的世界生成系统、更多自定义生物和全新的任务系统。',
+                    image: 'assets/images/news1.jpg',
+                    views: 1500,
+                    type: 'update'
+                },
+                {
+                    id: 2,
+                    title: '周末双倍经验活动预告',
+                    date: '2026-02-28',
+                    content: '本周末（3月5日-3月6日）将举行双倍经验活动，不要错过这个提升等级的好机会！',
+                    image: 'assets/images/news2.jpg',
+                    views: 2300,
+                    type: 'event'
+                },
+                {
+                    id: 3,
+                    title: '新管理员招募公告',
+                    date: '2026-02-25',
+                    content: '我们正在寻找热心、负责任的玩家加入管理员团队。如果你有兴趣，请查看详情并提交申请。',
+                    image: 'assets/images/news3.jpg',
+                    views: 1800,
+                    type: 'announcement'
+                },
+                {
+                    id: 4,
+                    title: '建筑大赛结果公布',
+                    date: '2026-02-20',
+                    content: '恭喜以下玩家在本次建筑大赛中获奖：第一名：BuilderMaster，第二名：CreativeGenius，第三名：BlockArtist。',
+                    image: 'assets/images/news4.jpg',
+                    views: 2100,
+                    type: 'result'
+                },
+                {
+                    id: 5,
+                    title: '服务器维护通知',
+                    date: '2026-02-18',
+                    content: '服务器将于2月20日凌晨2:00-4:00进行例行维护，期间服务器将暂时关闭。请提前做好准备。',
+                    image: 'assets/images/news5.jpg',
+                    views: 1600,
+                    type: 'maintenance'
+                },
+                {
+                    id: 6,
+                    title: '新模组介绍：魔法世界',
+                    date: '2026-02-15',
+                    content: '我们新增了"魔法世界"模组，带来了全新的魔法系统、咒语和魔法物品。快来探索这个神奇的魔法世界吧！',
+                    image: 'assets/images/news6.jpg',
+                    views: 2500,
+                    type: 'mod'
+                }
+            ];
+            
+            // 根据类型排序
+            let sortedNews;
+            if (type === 'latest') {
+                sortedNews = newsData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            } else if (type === 'popular') {
+                sortedNews = newsData.sort((a, b) => b.views - a.views);
+            }
+            
+            // 显示新闻卡片
+            sortedNews.forEach((news, index) => {
+                const newsCard = document.createElement('div');
+                newsCard.className = 'news-card bg-gray-800 rounded-lg overflow-hidden shadow-lg';
+                newsCard.setAttribute('data-aos', 'fade-up');
+                newsCard.setAttribute('data-aos-delay', (index % 3) * 100);
+                
+                newsCard.innerHTML = `
+                    <img src="${news.image}" alt="${news.title}" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs text-gray-400">${news.date}</span>
+                            <span class="text-xs text-gray-400"><i class="fa fa-eye mr-1"></i> ${news.views}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-3">${news.title}</h3>
+                        <p class="text-gray-300 mb-4">${news.content}</p>
+                        <a href="#" class="text-primary hover:text-green-400 transition-colors font-medium">阅读更多 <i class="fa fa-arrow-right ml-1"></i></a>
+                    </div>
+                `;
+                
+                newsContainer.appendChild(newsCard);
+            });
+        }
+        
+        // 加载管理员数据
+        function loadAdmins() {
+            const adminsContainer = document.querySelector('#admins .grid');
+            
+            // 模拟管理员数据
+            const adminsData = [
+                {
+                    id: 1,
+                    name: '迷路的甘蔗君',
+                    role: '服主',
+                    avatar: 'assets/images/admin1.jpg',
+                    joinDate: '2026-02-28',
+                    description: '服务器的提出者，负责整体运营和管理。MC牢玩家(doge)，玩过Cave Game。',
+                    skills: ['捣乱王', '凑数的', '吃饭睡觉']
+                },
+                {
+                    id: 2,
+                    name: '和善鸡骑士画漫画',
+                    role: '新手村村长，酒馆老板',
+                    avatar: 'assets/images/admin2.jpg',
+                    joinDate: '2026-02-28',
+                    description: '负责服务器建设与未来运营。精通建筑技术和美学设计。',
+                    skills: ['建筑师', '天使投资人', '全服英雄']
+                },
+                {
+                    id: 3,
+                    name: '附近的比得过',
+                    role: '指令师，冒险家工会(不是盗的)会长',
+                    avatar: 'assets/images/admin3.jpg',
+                    joinDate: '2026-02-28',
+                    description: '负责服务器安全指令。',
+                    skills: ['指令', '防炸服最佳管理员', '《占位符(不知道写啥了)》']
+                },
+                {
+                    id: 4,
+                    name: '江苏压力王',
+                    role: '建筑师',
+                    avatar: 'assets/images/admin4.jpg',
+                    joinDate: '2022-04-05',
+                    description: '负责服务器建设。运营策划。',
+                    skills: ['建筑达人', '幻想的工程师', '运营策划']
+                },
+                {
+                    id: 5,
+                    name: '梦中梦mk',
+                    role: '管理员，主城最严厉的父亲',
+                    avatar: 'assets/images/admin5.jpg',
+                    joinDate: '2022-04-05',
+                    description: '负责服务器建设。主城管理。',
+                    skills: ['管理活动', '主城城主', '主城管理']
+                },
+                {
+                    id: 6,
+                    name: '宇智波的小孟',
+                    role: '农业部部长',
+                    avatar: 'assets/images/admin6.jpg',
+                    joinDate: '2026-02-28',
+                    description: '农业管理。食物供应。',
+                    skills: ['种地王', '农业部部长', '特级卫生阴兵']
+                },
+                {
+                    id: 7,
+                    name: '终生愿与愁',
+                    role: '宣发组组长',
+                    avatar: 'assets/images/admin7.jpg',
+                    joinDate: '2026-02-28',
+                    description: '服务器宣传。',
+                    skills: ['充当柳雨涵', '副本地图建设者', '特级阴兵']
+                },
+                {
+                    id: 8,
+                    name: '屑广山',
+                    role: '管理员',
+                    avatar: 'assets/images/admin8.jpg',
+                    joinDate: '2026-02-28',
+                    description: '服务器治安的管理者，靠谱的很',
+                    skills: ['先空着', '先空着', '先空着']
+                },
+                {
+                    id: 9,
+                    name: '风花雪月饼',
+                    role: '金融街教父',
+                    avatar: 'assets/images/admin9.jpg',
+                    joinDate: '2026-02-28',
+                    description: '服务器金融的头牌，靠谱且可靠',
+                    skills: ['先空着', '先空着', '先空着']
+                },
+            ];
+            
+            // 显示管理员卡片
+            adminsData.forEach((admin, index) => {
+                const adminCard = document.createElement('div');
+                adminCard.className = 'admin-card';
+                adminCard.setAttribute('data-aos', 'fade-up');
+                adminCard.setAttribute('data-aos-delay', (index % 4) * 100);
+                adminCard.setAttribute('data-admin-id', admin.id);
+                
+                adminCard.innerHTML = `
+                    <img src="${admin.avatar}" alt="${admin.name}" class="w-full h-64 object-cover">
+                    <div class="admin-info">
+                        <h3 class="text-xl font-bold text-white mb-1">${admin.name}</h3>
+                        <p class="text-primary mb-3">${admin.role}</p>
+                        <button class="text-white hover:text-primary transition-colors">查看详情 <i class="fa fa-arrow-right ml-1"></i></button>
+                    </div>
+                `;
+                
+                adminsContainer.appendChild(adminCard);
+                
+                // 添加点击事件
+                adminCard.addEventListener('click', function() {
+                    showAdminDetails(admin);
+                });
+            });
+        }
+        
+        // 显示管理员详情
+        function showAdminDetails(admin) {
+            const adminModal = document.getElementById('admin-modal');
+            const adminDetails = document.getElementById('admin-details');
+            
+            adminDetails.innerHTML = `
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="md:w-1/3">
+                        <img src="${admin.avatar}" alt="${admin.name}" class="w-full rounded-lg">
+                    </div>
+                    <div class="md:w-2/3">
+                        <h2 class="text-3xl font-bold text-white mb-2">${admin.name}</h2>
+                        <p class="text-primary text-xl mb-6">${admin.role}</p>
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-white mb-2">关于我</h3>
+                            <p class="text-gray-300">${admin.description}</p>
+                        </div>
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-white mb-2">加入时间</h3>
+                            <p class="text-gray-300">${admin.joinDate}</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-2">专长</h3>
+                            <div class="flex flex-wrap gap-2">
+                                ${admin.skills.map(skill => `<span class="px-3 py-1 bg-gray-700 text-white rounded-full text-sm">${skill}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div class="mt-8">
+                            <a href="#" class="btn-primary">发送消息(?)</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            adminModal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 加载活动数据
+        function loadEvents() {
+            const eventsContainer = document.querySelector('#events .grid');
+            
+            // 模拟活动数据
+            const eventsData = [
+                {
+                    id: 1,
+                    title: '周末双倍经验活动',
+                    date: '2026-03-05',
+                    time: '全天',
+                    description: '本周末（3月5日-3月6日）将举行双倍经验活动，不要错过这个提升等级的好机会！',
+                    image: 'assets/images/event1.jpg',
+                    location: '全服务器'
+                },
+                {
+                    id: 2,
+                    title: '红石电路设计大赛',
+                    date: '2026-03-15',
+                    time: '14:00-20:00',
+                    description: '展示你的红石电路设计才华，赢取丰厚奖励！比赛分为初级、中级和高级三个组别。',
+                    image: 'assets/images/event2.jpg',
+                    location: '活动区域'
+                }
+            ];
+            
+            // 显示活动卡片
+            eventsData.forEach((event, index) => {
+                const eventCard = document.createElement('div');
+                eventCard.className = 'bg-gray-800 rounded-lg overflow-hidden shadow-lg hover-scale';
+                eventCard.setAttribute('data-aos', 'fade-up');
+                eventCard.setAttribute('data-aos-delay', (index % 2) * 100);
+                
+                eventCard.innerHTML = `
+                    <div class="md:flex">
+                        <div class="md:w-1/3">
+                            <img src="${event.image}" alt="${event.title}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-6 md:w-2/3">
+                            <div class="flex items-center mb-4">
+                                <div class="bg-primary text-white text-center rounded-lg p-3 mr-4">
+                                    <span class="block text-2xl font-bold">${new Date(event.date).getDate()}</span>
+                                    <span class="block text-sm">${['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'][new Date(event.date).getMonth()]}</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-white">${event.title}</h3>
+                            </div>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center">
+                                    <i class="fa fa-clock-o text-primary mr-3 w-5 text-center"></i>
+                                    <span class="text-gray-300">${event.time}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-map-marker text-primary mr-3 w-5 text-center"></i>
+                                    <span class="text-gray-300">${event.location}</span>
+                                </div>
+                            </div>
+                            <p class="text-gray-300 mb-6">${event.description}</p>
+                            <a href="#" class="btn-primary">了解详情</a>
+                        </div>
+                    </div>
+                `;
+                
+                eventsContainer.appendChild(eventCard);
+            });
+        }
+        
+        // 加载模组数据
+        function loadMods(category) {
+            const modsContainer = document.getElementById('mods-container');
+            modsContainer.innerHTML = '';
+            
+            // 模拟模组数据
+            const modsData = [
+                {
+                    id: 1,
+                    name: '工业2',
+                    author: 'IndustrialCraft Team',
+                    category: 'tech',
+                    description: '增加了各种工业机器和自动化系统，让你的世界更加现代化。',
+                    image: 'assets/images/mod1.jpg',
+                    version: '2.8.170'
+                },
+                {
+                    id: 2,
+                    name: '建筑工艺',
+                    author: 'RWTema',
+                    category: 'building',
+                    description: '提供了各种建筑工具，让建筑更加简单和高效。',
+                    image: 'assets/images/mod2.jpg',
+                    version: '1.12.2-7.1.0'
+                },
+                {
+                    id: 3,
+                    name: '神秘时代',
+                    author: 'Azanor',
+                    category: 'magic',
+                    description: '一个复杂的魔法系统，让你可以学习各种法术和制作魔法物品。',
+                    image: 'assets/images/mod3.jpg',
+                    version: '6.1.6'
+                },
+                {
+                    id: 4,
+                    name: '暮色森林',
+                    author: 'Benimatic',
+                    category: 'adventure',
+                    description: '增加了一个全新的维度，充满了新的生物、结构和宝藏。',
+                    image: 'assets/images/mod4.jpg',
+                    version: '2.3.7'
+                },
+                {
+                    id: 5,
+                    name: 'JEI物品管理器',
+                    author: 'mezz',
+                    category: 'utility',
+                    description: '让你可以查看所有物品的合成配方和用途。',
+                    image: 'assets/images/mod5.jpg',
+                    version: '4.15.0.268'
+                },
+                {
+                    id: 6,
+                    name: '热力膨胀',
+                    author: 'Team CoFH',
+                    category: 'tech',
+                    description: '提供了各种能源系统和自动化机器，与工业2相辅相成。',
+                    image: 'assets/images/mod6.jpg',
+                    version: '5.8.0.26'
+                }
+            ];
+            
+            // 筛选模组
+            let filteredMods;
+            if (category === 'all') {
+                filteredMods = modsData;
+            } else {
+                filteredMods = modsData.filter(mod => mod.category === category);
+            }
+            
+            // 显示模组卡片
+            filteredMods.forEach((mod, index) => {
+                const modCard = document.createElement('div');
+                modCard.className = 'mod-card bg-gray-800 rounded-lg overflow-hidden shadow-lg';
+                modCard.setAttribute('data-aos', 'fade-up');
+                modCard.setAttribute('data-aos-delay', (index % 3) * 100);
+                
+                modCard.innerHTML = `
+                    <div class="md:flex">
+                        <div class="md:w-1/3">
+                            <img src="${mod.image}" alt="${mod.name}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-6 md:w-2/3">
+                            <h3 class="text-xl font-bold text-white mb-2">${mod.name}</h3>
+                            <p class="text-primary mb-4">作者: ${mod.author}</p>
+                            <p class="text-gray-300 mb-4">${mod.description}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">版本: ${mod.version}</span>
+                                <span class="px-3 py-1 bg-gray-700 text-white rounded-full text-sm">${getCategoryName(mod.category)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modsContainer.appendChild(modCard);
+            });
+        }
+        
+        // 获取模组分类名称
+        function getCategoryName(category) {
+            const categories = {
+                'building': '建筑',
+                'tech': '科技',
+                'magic': '魔法',
+                'adventure': '冒险',
+                'utility': '实用工具'
+            };
+            return categories[category] || category;
+        }
+    </script>
+</body>
+</html>
